@@ -6,16 +6,17 @@
 
 ## Where It Stands
 
-All 21 understanding items are agreed and all 79 findings are confirmed, though today's process, available products and some compliance and operations questions are still unknown. The next step is to decide whether the first version has a screen, which would need a mock before the topic is settled and specified.
+All 25 understanding items are agreed and all 83 findings are confirmed, and the spec in specs/001-clearing-exchange-prep and its approved screen mock reflect them. The next step is planning; today's process, available products and some compliance and operations questions are still unknown.
 
 ## Files
 
 - notes.md | 0 findings
 - materials.md | 0 findings
-- research.md | 64 findings: 64 confirmed, 0 inferred, 0 observed
+- research.md | 68 findings: 68 confirmed, 0 inferred, 0 observed
 - landscape.md | 3 findings: 3 confirmed, 0 inferred, 0 observed
 - concepts.md | 12 findings: 12 confirmed, 0 inferred, 0 observed
-- understanding.md | 0 findings, 21 items agreed, 0 open
+- understanding.md | 0 findings, 25 items agreed, 0 open
+- mocks/index.md | 0 findings, 1 mock approved
 
 ## Related Topics *(required, or none)*
 

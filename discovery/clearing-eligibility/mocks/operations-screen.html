@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clearing operations (mock)</title>
+<style>
+  :root { --bg:#f6f7f9; --card:#fff; --ink:#1c2430; --mute:#5d6878; --line:#dde2ea; --accent:#2456c9;
+          --ok:#1b7f4b; --wait:#8a6100; --review:#7a3fb0; --no:#b3261e; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:14px/1.45 system-ui,-apple-system,Segoe UI,sans-serif; }
+  header { display:flex; gap:16px; align-items:center; flex-wrap:wrap; padding:12px 20px; background:var(--ink); color:#fff; }
+  header h1 { font-size:16px; margin:0; }
+  header .tag { background:#ffd666; color:#3d2c00; border-radius:4px; padding:2px 8px; font-size:12px; font-weight:600; }
+  header .right { margin-left:auto; display:flex; gap:14px; align-items:center; flex-wrap:wrap; }
+  nav { display:flex; gap:4px; padding:0 20px; background:var(--card); border-bottom:1px solid var(--line); flex-wrap:wrap; }
+  nav button { border:0; background:none; padding:12px 14px; cursor:pointer; color:var(--mute); border-bottom:3px solid transparent; font:inherit; }
+  nav button.on { color:var(--ink); border-bottom-color:var(--accent); font-weight:600; }
+  main { padding:16px 20px 40px; display:grid; gap:16px; grid-template-columns:minmax(0,1.2fr) minmax(0,1fr); align-items:start; }
+  @media (max-width:900px){ main { grid-template-columns:1fr; } }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:14px; min-width:0; }
+  h2 { font-size:15px; margin:0 0 10px; } h3 { font-size:13px; margin:16px 0 6px; color:var(--mute); }
+  .scroll { overflow:auto; max-height:420px; }
+  table { border-collapse:collapse; width:100%; }
+  th,td { text-align:left; padding:7px 8px; border-bottom:1px solid var(--line); white-space:nowrap; }
+  th { color:var(--mute); font-weight:600; position:sticky; top:0; background:var(--card); }
+  td.num, th.num { text-align:right; font-variant-numeric:tabular-nums; }
+  tr.pick { cursor:pointer; } tr.pick:hover { background:#eef3ff; } tr.sel { background:#e2ebff; }
+  .pill { display:inline-block; padding:1px 8px; border-radius:999px; font-size:12px; font-weight:600; border:1px solid currentColor; }
+  .eligible{color:var(--ok)} .waiting{color:var(--wait)} .review{color:var(--review)} .noteligible{color:var(--no)}
+  .open{color:var(--accent)} .closed{color:var(--wait)} .exchanged{color:var(--ok)}
+  .warn { background:#fdecea; border:1px solid #f3b7b2; border-radius:6px; padding:8px 10px; margin:8px 0; }
+  .note { background:#eef3ff; border-radius:6px; padding:8px 10px; margin:8px 0; color:#243c74; }
+  .bar { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+  input,select,textarea,button.act { font:inherit; padding:6px 9px; border:1px solid var(--line); border-radius:6px; background:#fff; color:var(--ink); }
+  textarea { width:100%; min-height:54px; }
+  button.act { cursor:pointer; background:var(--accent); border-color:var(--accent); color:#fff; }
+  button.act.alt { background:#fff; color:var(--accent); }
+  button.act:disabled { opacity:.45; cursor:not-allowed; }
+  dl { display:grid; grid-template-columns:max-content 1fr; gap:3px 14px; margin:0; } dt { color:var(--mute); } dd { margin:0; }
+  ul { padding-left:18px; margin:4px 0; }
+  .full { grid-column:1 / -1; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Clearing operations</h1>
+  <span class="tag">MOCK · synthetic data · nothing is saved</span>
+  <div class="right">
+    <span>Processing date 2026-11-25</span>
+    <label>Acting as
+      <select id="role">
+        <option value="operator">Operator</option>
+        <option value="supervisor">Supervisor</option>
+        <option value="admin">Rule administrator</option>
+      </select>
+    </label>
+  </div>
+</header>
+<nav id="nav"></nav>
+<main id="main"></main>
+
+<script>
+const RV = "RV-2 (effective 2026-11-17)";
+const NOW = "2026-11-25 09:40";
+const LIMIT_NOTE = "Amount limit applied to images as a working position, to be confirmed by compliance.";
+
+const money = c => (c/100).toLocaleString("en-CA",{minimumFractionDigits:2,maximumFractionDigits:2});
+const esc = s => String(s).replace(/[&<>"]/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+const LABEL = {eligible:"Eligible", waiting:"Waiting", review:"Needs review", noteligible:"Not eligible"};
+const CHECKS = ["Kind and drawee (A1 s.2, s.3, s.5)","Not in dispute (A1 s.9)","Not post-dated (A1 s.10)",
+  "Day of month shown or reached (A1 s.11)","No protest direction (A1 s.12)","Amount limit and splitting (A1 s.13)"];
+
+function item(id, kind, method, cents, date, drawee, outcome, reasons, extra={}) {
+  return Object.assign({id, kind, method, cents, date, drawee, outcome, reasons, held:null, group:null,
+    history:[{when:"2026-11-25 08:05", outcome, reasons:reasons.slice(), by:"System"}]}, extra);
+}
+const items = [
+  item("SYN-000101","Cheque","Paper",125000,"2026-11-24","Clearer B","eligible",[],{group:"PB-1001"}),
+  item("SYN-000102","Cheque","Paper",84950,"2026-12-02","Clearer B","waiting",[["A1 s.10","Dated after today. Checked again on 2026-12-02."]]),
+  item("SYN-000103","Cheque","Image",40000,"December 2026 (no day)","Clearer C","waiting",[["A1 s.11","No day shown. Checked again on 2026-12-01, the first business day of December."]]),
+  item("SYN-000104","Cheque","Paper",3140000000,"2026-11-24","Clearer C","noteligible",[["A1 s.13a","Amount is over CAD 25,000,000.00 and no inter-member exception applies."]]),
+  item("SYN-000105","Settlement voucher","Paper",4000000000,"2026-11-25","Clearer B","eligible",[["A1 s.13a","Over the limit, allowed: payment to manage settlement balances."]],{group:"PB-1002"}),
+  item("SYN-000106","Money order","Image",9900,"2026-11-23","Not a member","eligible",[["A1 s.5","Canadian postal money order: membership not required."]],{group:"IG-2001"}),
+  item("SYN-000107","Cheque","Paper",560000,"2026-11-20","Clearer B","noteligible",[["A1 s.9","Marked as disputed after it was placed in a bundle."]],{group:"PB-0998"}),
+  item("SYN-000108","Cheque","Paper",215000,"2026-11-24","Clearer C","review",[["A1 s.12","Capture flagged wording that asks for protest or notice of dishonour."]],{flag:"protest"}),
+  item("SYN-000109","Cheque","Image",1800000000,"2026-11-24","Clearer B","review",[["A1 s.13b","Staff flagged a possible split to avoid the amount limit."]],{flag:"split"}),
+  item("SYN-000110","Cheque","Paper",33000,"Unreadable","Clearer B","review",[["A1 s.10","The date cannot be read, so the date checks cannot be made."]],{flag:"date"}),
+  item("SYN-000111","Paper remittance","Image",12500,"2026-11-24","Clearer C","noteligible",[["A10 s.8b","This kind of item may not be exchanged as an image."]]),
+  item("SYN-000112","Cheque","Paper",76000,"2026-11-24","Clearer C","eligible",[],{held:"Held from bundles: 'attachments removed' is not recorded (A1 s.15)."}),
+  item("SYN-000113","Cheque","Image",45500,"2026-11-24","Clearer B","eligible",[],{held:"Held from file groups: capture reports the black and white image at 180 DPI; 200 to 240 is needed (A10 s.11)."}),
+];
+
+items.find(i=>i.id==="SYN-000107").history = [
+  {when:"2026-11-24 16:10", outcome:"eligible", by:"System"},
+  {when:"2026-11-25 09:12", outcome:"noteligible", by:"System", why:"Dispute received"},
+];
+
+function rows(n, seed, first) {
+  let out=[]; for (let i=0;i<n;i++) out.push({id:"SYN-"+String(seed+i).padStart(6,"0"), cents:1000+((seed+i)*7919)%900000});
+  if (first) out[0] = first;
+  return out;
+}
+const groups = [
+  {id:"PB-1001", type:"Paper bundle", receiver:"Clearer B", stream:"Encoded", max:300, state:"closed", list:rows(300,200000,{id:"SYN-000101",cents:125000}), log:[["2026-11-25 09:00","System","Closed: full (300 items)."]]},
+  {id:"PB-0998", type:"Paper bundle", receiver:"Clearer B", stream:"Encoded", max:300, state:"closed", flagged:"SYN-000107", list:rows(86,210000,{id:"SYN-000107",cents:560000}), log:[["2026-11-24 17:00","System","Closed: cut-off."],["2026-11-25 09:12","System","Flagged: SYN-000107 is no longer eligible (A1 s.9)."]]},
+  {id:"PB-1002", type:"Paper bundle", receiver:"Clearer B", stream:"Encoded", max:300, state:"open", list:rows(50,220000,{id:"SYN-000105",cents:4000000000}), log:[]},
+  {id:"PB-0990", type:"Paper bundle", receiver:"Clearer C", stream:"Unqualified", max:300, state:"exchanged", list:rows(214,230000), log:[["2026-11-24 17:00","System","Closed: cut-off."],["2026-11-24 19:30","Sending system","Reported exchanged."]]},
+  {id:"IG-1998", type:"Image file group", receiver:"Clearer B", keys:["Exchange point EP-1","Processing site S-1","CAD","Forward"], max:40000, state:"closed", count:40000, cents:5821400350, list:rows(20,300000), log:[["2026-11-25 08:50","System","Closed: full (40,000 items)."]]},
+  {id:"IG-2001", type:"Image file group", receiver:"Clearer C", keys:["Exchange point EP-2","Processing site S-1","CAD","Forward"], max:40000, state:"open", count:12480, cents:1734002215, list:rows(20,310000,{id:"SYN-000106",cents:9900}), log:[]},
+];
+const count = g => g.count ?? g.list.length;
+const total = g => g.cents ?? g.list.reduce((a,r)=>a+r.cents,0);
+
+let tab="items", selItem="SYN-000104", selGroup="PB-0998", filter="all", query="";
+const role = () => document.getElementById("role").value;
+const canReview = () => role()==="operator" || role()==="supervisor";
+const canExchange = canReview;
+const canReopen = () => role()==="supervisor";
+const roleName = () => ({operator:"Operator",supervisor:"Supervisor",admin:"Rule administrator"})[role()];
+const pill = (cls,text) => `<span class="pill ${cls}">${text}</span>`;
+
+function itemTable(list) {
+  return `<div class="scroll"><table><tr><th>Item</th><th>Kind</th><th>Method</th><th class="num">Amount (CAD)</th><th>Outcome</th><th>Why</th></tr>
+  ${list.map(i=>`<tr class="pick ${i.id===selItem?"sel":""}" data-item="${i.id}"><td>${i.id}</td><td>${i.kind}</td><td>${i.method}</td>
+  <td class="num">${money(i.cents)}</td><td>${pill(i.outcome,LABEL[i.outcome])}${i.held?" · held":""}</td>
+  <td>${i.reasons.map(r=>r[0]).join(", ")}</td></tr>`).join("") || `<tr><td colspan="6">No items match.</td></tr>`}</table></div>`;
+}
+
+function itemDetail(i) {
+  const reasons = i.reasons.length ? `<ul>${i.reasons.map(r=>`<li><b>${r[0]}</b>: ${r[1]}</li>`).join("")}</ul>`
+    : `<p>All checks passed:</p><ul>${CHECKS.map(c=>`<li>${c}</li>`).join("")}</ul>`;
+  return `<h2>${i.id} ${pill(i.outcome,LABEL[i.outcome])}</h2>
+  <dl><dt>Kind</dt><dd>${i.kind}</dd><dt>Method</dt><dd>${i.method}</dd><dt>Amount</dt><dd>CAD ${money(i.cents)}</dd>
+  <dt>Date on item</dt><dd>${esc(i.date)}</dd><dt>Drawee</dt><dd>${i.drawee}</dd>
+  <dt>Group</dt><dd>${i.group?`<a href="#" data-gogroup="${i.group}">${i.group}</a>`:"None"}</dd>
+  <dt>Rule version</dt><dd>${RV}</dd></dl>
+  <h3>Why this outcome</h3>${reasons}
+  ${i.method==="Image" && i.cents>2500000000 ? `<div class="note">${LIMIT_NOTE}</div>`:""}
+  ${i.held?`<div class="warn">${i.held}</div>`:""}
+  <h3>Decision history</h3><ul>${i.history.slice().reverse().map(h=>`<li>${h.when} · ${LABEL[h.outcome]} · ${esc(h.by)} · ${RV}${h.why?` · "${esc(h.why)}"`:""}</li>`).join("")}</ul>`;
+}
+
+function reviewForm(i) {
+  if (i.outcome!=="review") return "";
+  const off = canReview() ? "" : "disabled";
+  const field = i.flag==="date"
+    ? `<p><label>Correct date <input type="date" id="newdate" ${off}></label></p>`
+    : `<p>The flag is: <b>${i.flag==="protest"?"protest direction":"possible splitting"}</b>.</p>`;
+  const buttons = i.flag==="date"
+    ? `<button class="act" data-resolve="correct" ${off}>Save and check again</button>`
+    : `<button class="act" data-resolve="correct" ${off}>Flag is wrong: remove and check again</button>
+       <button class="act alt" data-resolve="uphold" ${off}>Flag is right: not eligible</button>`;
+  return `<h3>Resolve</h3>${field}<textarea id="why" placeholder="Reason (required)" ${off}></textarea>
+  <div class="bar" style="margin-top:8px">${buttons}</div><div id="err" class="warn" hidden></div>
+  <div class="note">A person cannot mark an item eligible directly. They correct the data or flag, and the rules decide.</div>
+  ${canReview()?"":`<div class="note">${roleName()} cannot resolve review items.</div>`}`;
+}
+
+function groupTable() {
+  return `<div class="scroll"><table><tr><th>Group</th><th>Type</th><th>Receiver</th><th>Sorting stream or keys</th><th class="num">Items</th><th class="num">Total (CAD)</th><th>State</th></tr>
+  ${groups.map(g=>`<tr class="pick ${g.id===selGroup?"sel":""}" data-group="${g.id}"><td>${g.id}${g.flagged?" ⚠":""}</td><td>${g.type}</td><td>${g.receiver}</td>
+  <td>${g.stream ?? g.keys.slice(0,2).join(", ")}</td><td class="num">${count(g).toLocaleString()} / ${g.max.toLocaleString()}</td>
+  <td class="num">${money(total(g))}</td><td>${pill(g.state, g.state[0].toUpperCase()+g.state.slice(1))}</td></tr>`).join("")}</table></div>`;
+}
+
+function groupDetail(g) {
+  const paper = g.type==="Paper bundle";
+  let actions="";
+  if (g.state==="closed") actions = `<textarea id="why" placeholder="Reason (required to reopen)"></textarea>
+    <div class="bar" style="margin-top:8px">
+      <button class="act alt" data-act="reopen" ${canReopen()?"":"disabled"}>Reopen</button>
+      <button class="act" data-act="exchange" ${canExchange()?"":"disabled"}>Mark exchanged</button>
+    </div>${canReopen()?"":`<div class="note">Only a supervisor can reopen a closed group.</div>`}`;
+  if (g.state==="open" && g.reopened) actions = `<div class="bar"><button class="act" data-act="close" ${canReopen()?"":"disabled"}>Close again</button></div>`;
+  if (g.state==="open" && !g.reopened) actions = `<div class="note">Closes on its own when full or at the cut-off (next: 17:00, sample value).</div>`;
+  if (g.state==="exchanged") actions = `<div class="note">Exchanged. This group can no longer change.</div>`;
+  const removable = g.state==="open" && g.reopened;
+  return `<h2>${g.id} ${pill(g.state, g.state[0].toUpperCase()+g.state.slice(1))}</h2>
+  <dl><dt>Type</dt><dd>${g.type}</dd><dt>Receiver</dt><dd>${g.receiver}</dd>
+  ${paper?`<dt>Sorting stream</dt><dd>${g.stream}</dd>`:`<dt>Keys</dt><dd>${g.keys.join(" · ")}</dd>`}
+  <dt>Delivering Direct Clearer</dt><dd>Our bank (sample)</dd><dt>Processing date</dt><dd>2026-11-25</dd>
+  <dt>Items</dt><dd>${count(g).toLocaleString()} of ${g.max.toLocaleString()}</dd><dt>Total</dt><dd>CAD ${money(total(g))}</dd></dl>
+  ${g.flagged?`<div class="warn">${g.flagged} is no longer eligible (A1 s.9). Contents are fixed. A supervisor can reopen the group and remove it.</div>`:""}
+  <div style="margin-top:10px">${actions}</div><div id="err" class="warn" hidden></div>
+  <h3>${g.state==="open"?"Contents":"List"} in item order${count(g)>g.list.length?` (first ${g.list.length} of ${count(g).toLocaleString()})`:""}</h3>
+  <div class="scroll" style="max-height:260px"><table><tr><th>#</th><th>Item</th><th class="num">Amount (CAD)</th>${removable?"<th></th>":""}</tr>
+  ${g.list.map((r,n)=>`<tr><td>${n+1}</td><td>${r.id}${r.id===g.flagged?" ⚠":""}</td><td class="num">${money(r.cents)}</td>${removable?`<td><button class="act alt" data-remove="${r.id}">Remove</button></td>`:""}</tr>`).join("")}</table></div>
+  ${paper&&g.state!=="open"?`<h3>Clearing log for ${g.receiver}, this cut-off</h3><p>${g.id} · ${count(g)} items · CAD ${money(total(g))}</p>`:""}
+  <h3>History</h3>${g.log.length?`<ul>${g.log.map(l=>`<li>${l[0]} · ${l[1]} · ${esc(l[2])}</li>`).join("")}</ul>`:"<p>Nothing yet.</p>"}`;
+}
+
+function render() {
+  const reviewCount = items.filter(i=>i.outcome==="review").length;
+  const flagged = groups.filter(g=>g.flagged).length;
+  document.getElementById("nav").innerHTML = [["items","Items"],["review",`Needs review (${reviewCount})`],["groups",`Groups${flagged?` (${flagged} flagged)`:""}`]]
+    .map(([k,t])=>`<button class="${tab===k?"on":""}" data-tab="${k}">${t}</button>`).join("");
+  const main = document.getElementById("main");
+  const current = items.find(i=>i.id===selItem);
+  if (tab==="items") {
+    const list = items.filter(i=>(filter==="all"||(filter==="held"?i.held:i.outcome===filter)) && i.id.toLowerCase().includes(query.toLowerCase()));
+    main.innerHTML = `<section class="card"><h2>Items</h2><div class="bar"><input id="search" placeholder="Find item number" value="${esc(query)}">
+      <select id="filter">${[["all","All outcomes"],["eligible","Eligible"],["waiting","Waiting"],["review","Needs review"],["noteligible","Not eligible"],["held","Held from grouping"]]
+      .map(([v,t])=>`<option value="${v}" ${filter===v?"selected":""}>${t}</option>`).join("")}</select></div>${itemTable(list)}</section>
+      <section class="card">${itemDetail(current)}</section>`;
+  } else if (tab==="review") {
+    const list = items.filter(i=>i.outcome==="review");
+    if (list.length && !list.some(i=>i.id===selItem)) selItem=list[0].id;
+    const shown = items.find(i=>i.id===selItem);
+    main.innerHTML = `<section class="card"><h2>Needs review</h2>${itemTable(list)}</section>
+      <section class="card">${itemDetail(shown)}${reviewForm(shown)}</section>`;
+  } else {
+    main.innerHTML = `<section class="card"><h2>Groups</h2>${groupTable()}</section>
+      <section class="card">${groupDetail(groups.find(g=>g.id===selGroup))}</section>`;
+  }
+}
+
+function fail(msg) { const e=document.getElementById("err"); e.textContent=msg; e.hidden=false; }
+
+function resolve(how) {
+  const i = items.find(x=>x.id===selItem);
+  const why = document.getElementById("why").value.trim();
+  if (!why) return fail("Give a reason.");
+  if (how==="uphold") { i.outcome="noteligible"; i.reasons=[[i.reasons[0][0], "Confirmed by a person: "+(i.flag==="protest"?"the item asks for protest or notice of dishonour.":"the items were split to avoid the amount limit.")]]; }
+  else if (i.flag==="date") {
+    const d = document.getElementById("newdate").value;
+    if (!d) return fail("Enter the corrected date.");
+    i.date = d;
+    if (d > "2026-11-25") { i.outcome="waiting"; i.reasons=[["A1 s.10",`Dated after today. Checked again on ${d}.`]]; }
+    else { i.outcome="eligible"; i.reasons=[]; }
+  } else { i.outcome="eligible"; i.reasons=[]; }
+  i.history.push({when:NOW, outcome:i.outcome, by:roleName(), why});
+  tab="items"; filter="all"; query=""; render();
+}
+
+function groupAct(act) {
+  const g = groups.find(x=>x.id===selGroup);
+  const why = document.getElementById("why")?.value.trim();
+  if (act==="reopen") {
+    if (!why) return fail("Give a reason to reopen.");
+    g.state="open"; g.reopened=true; g.log.push([NOW, roleName(), "Reopened: "+why]);
+  } else if (act==="close") { g.state="closed"; g.reopened=false; g.log.push([NOW, roleName(), "Closed again. List and totals produced again."]); }
+  else if (act==="exchange") {
+    if (g.flagged && !confirm(`${g.flagged} is no longer eligible. Record that this group was exchanged anyway?`)) return;
+    g.state="exchanged"; g.log.push([NOW, roleName(), g.flagged?`Reported exchanged while flagged (${g.flagged}).`:"Reported exchanged."]);
+  }
+  render();
+}
+
+document.addEventListener("click", e => {
+  const t = e.target.closest("[data-tab],[data-item],[data-group],[data-gogroup],[data-resolve],[data-act],[data-remove]");
+  if (!t) return;
+  const d = t.dataset;
+  if (d.tab) { tab=d.tab; render(); }
+  else if (d.item) { selItem=d.item; render(); }
+  else if (d.group) { selGroup=d.group; render(); }
+  else if (d.gogroup) { e.preventDefault(); selGroup=d.gogroup; tab="groups"; render(); }
+  else if (d.resolve) resolve(d.resolve);
+  else if (d.act) groupAct(d.act);
+  else if (d.remove) {
+    const g = groups.find(x=>x.id===selGroup);
+    const gone = g.list.find(r=>r.id===d.remove);
+    if (g.count !== undefined) { g.count -= 1; g.cents -= gone.cents; }
+    g.list = g.list.filter(r=>r.id!==d.remove);
+    if (g.flagged===d.remove) g.flagged=null;
+    const i = items.find(x=>x.id===d.remove); if (i) i.group=null;
+    g.log.push([NOW, roleName(), "Removed "+d.remove+"."]);
+    render();
+  }
+});
+document.addEventListener("input", e => {
+  if (e.target.id==="search") { query=e.target.value; render(); const s=document.getElementById("search"); s.focus(); s.setSelectionRange(query.length,query.length); }
+});
+document.addEventListener("change", e => {
+  if (e.target.id==="filter") { filter=e.target.value; render(); }
+  if (e.target.id==="role") render();
+});
+render();
+</script>
+</body>
+</html>

@@ -124,5 +124,4 @@ none: no other topic exists
 ## Unknowns *(required, or none)*
 
 - What are the cut-off times that close a group? | ask: clearing operations
-- Who is authorized to reopen a closed group? | ask: clearing operations
 - Does the bank hold a post-dated item until its date, or send it back to the customer? | ask: clearing operations

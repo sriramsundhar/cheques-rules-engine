@@ -23,6 +23,10 @@ Terms used below: a Member belongs to Payments Canada; a Direct Clearer exchange
 - [F-CLR-3] Success means each Canadian-dollar item gets an eligibility decision that names the Rule A1 section behind it, and eligible items are prepared as paper bundles or image file groupings | evidence: stated: Sriram, 2026-11-24; understanding.md U-CLR-1 | status: confirmed
 - [F-CLR-63] The first version works out which items belong in each image file but does not produce the ANSI file, send it, or handle settlement or returns | evidence: stated: Sriram, 2026-11-24; understanding.md U-CLR-2 | status: confirmed
 - [F-CLR-79] Capabilities left out of the first version may be added to this project later, and none of them is needed from it by 2026-12-31 | evidence: stated: Sriram, 2026-11-25; understanding.md U-CLR-14 | status: confirmed
+- [F-CLR-80] The system treats an item as possibly split only when capture or staff flag it, and does not detect splitting itself | evidence: stated: Sriram, 2026-11-25; understanding.md U-CLR-22 | status: confirmed
+- [F-CLR-81] A person resolves a review item by correcting its data or flag with a reason so the checks run again, or by confirming a correct flag so the item becomes not eligible, and nobody can mark an item eligible directly | evidence: stated: Sriram, 2026-11-25; understanding.md U-CLR-23 | status: confirmed
+- [F-CLR-82] Operators view, resolve reviews and mark groups exchanged, supervisors can also reopen groups and close them again, and rule administrators view and load rule versions | evidence: stated: Sriram, 2026-11-25; understanding.md U-CLR-24 | status: confirmed
+- [F-CLR-83] A flagged group can still be marked exchanged after a warning, and this is recorded | evidence: stated: Sriram, 2026-11-25; understanding.md U-CLR-25 | status: confirmed
 - [F-CLR-41] The bank exchanges items both as paper bundles and as images | evidence: stated: Sriram, 2026-11-24; understanding.md U-CLR-1 | status: confirmed
 
 ## Constraints and Regulation *(required, or none)*
