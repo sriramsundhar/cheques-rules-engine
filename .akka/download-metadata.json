@@ -1,0 +1,22 @@
+{
+  "agents_md": {
+    "etag": "W/\"c135-66102c8620f39\"",
+    "last_modified": "Tue, 24 Nov 2026 10:00:39 GMT",
+    "downloaded_at": "2026-11-25T02:31:41Z",
+    "source_url": "https://doc.akka.io/_attachments/AGENTS.md"
+  },
+  "context": {
+    "etag": "\"182fa4-66102ced156e9\"",
+    "last_modified": "Tue, 24 Nov 2026 10:02:27 GMT",
+    "downloaded_at": "2026-11-25T02:31:41Z",
+    "source_url": "https://doc.akka.io/java/_attachments/akka-docs-md.zip"
+  },
+  "marketplace": {
+    "etag": "f8220c0cc101e52d76ec71bd7ce5176ba960c886",
+    "last_modified": "",
+    "downloaded_at": "2026-11-25T02:31:42Z",
+    "source_url": "https://github.com/akka/ai-marketplace.git",
+    "ref": "stable",
+    "version": "v2.9.5"
+  }
+}
