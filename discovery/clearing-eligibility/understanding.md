@@ -5,7 +5,7 @@
 
 ## Outcome *(required)*
 
-- **Items**: 21 | **Agreed**: 21 | **Amended**: 0 | **Rethinking**: 0 | **Disagreed**: 0 | **Open**: 0
+- **Items**: 25 | **Agreed**: 25 | **Amended**: 0 | **Rethinking**: 0 | **Disagreed**: 0 | **Open**: 0
 - **Open high-impact items**: 0
 - **Last session**: 2026-11-25, with Sriram
 
@@ -155,11 +155,39 @@
     - My suggestion: Build separately and borrow the ideas.
     - An example: Our business day calendar includes holidays, which the prototype's does not.
     - What changes if I am wrong: The work would become an extension of the prototype, or a purchase.
+- [U-CLR-22] The system treats an item as possibly split only when capture or staff flag it, and does not detect splitting itself | impact: high | covers: F-CLR-80 | response: agree | version: 1 | reason: none given | by: Sriram | date: 2026-11-25
+  - v1 (AI)
+    - What I think you mean: Only a flag from the capture system or a staff member raises possible splitting.
+    - Why I am asking: It decides whether the system needs a pattern check across items.
+    - My suggestion: Act only on flags.
+    - An example: Large cheques that nobody flagged are checked only against the single item limit.
+    - What changes if I am wrong: A detection rule, with payer and payee data, would have to be added.
+- [U-CLR-23] A person resolves a review item by correcting its data or flag with a reason so the checks run again, or by confirming a correct flag so the item becomes not eligible, and nobody can mark an item eligible directly | impact: high | covers: F-CLR-81 | response: agree | version: 1 | reason: none given | by: Sriram | date: 2026-11-25
+  - v1 (AI)
+    - What I think you mean: People fix wrong data or flags and the rules decide the outcome; a person who confirms a flag can only move the item to not eligible.
+    - Why I am asking: It sets what staff can change and what is audited.
+    - My suggestion: Allow no direct change to eligible.
+    - An example: A wrong protest flag is removed with a reason and the item is checked again.
+    - What changes if I am wrong: A direct override with a second approval would have to be added.
+- [U-CLR-24] Operators view, resolve reviews and mark groups exchanged, supervisors can also reopen groups and close them again, and rule administrators view and load rule versions | impact: high | covers: F-CLR-82 | response: agree | version: 1 | reason: none given | by: Sriram | date: 2026-11-25
+  - v1 (AI)
+    - What I think you mean: There are three roles with the permissions listed.
+    - Why I am asking: It sets who is allowed to do each action.
+    - My suggestion: Separate routine work from higher-risk actions.
+    - An example: An operator who tries to reopen a group is refused.
+    - What changes if I am wrong: Permissions would be too wide or too narrow.
+- [U-CLR-25] A flagged group can still be marked exchanged after a warning, and this is recorded | impact: high | covers: F-CLR-83 | response: agree | version: 1 | reason: none given | by: Sriram | date: 2026-11-25
+  - v1 (AI)
+    - What I think you mean: A report that a group was sent is recorded even if an item in it has since become ineligible.
+    - Why I am asking: It decides whether a flag blocks the group.
+    - My suggestion: Warn and record rather than block.
+    - An example: A bundle already handed over is marked exchanged with the flag noted.
+    - What changes if I am wrong: Flagged groups would have to be blocked until reopened.
 
 ## Follow-ups *(required, or none)*
 
-none: all 21 items were checked, and none was disagreed or amended
+none: all 25 items were checked, and none was disagreed or amended
 
 ## Decisions Raised *(required, or none)*
 
-none: all 21 items were checked, and none raised a choice that is still open
+none: all 25 items were checked, and none raised a choice that is still open
